@@ -1,0 +1,6 @@
+{
+  "name": "Al Mokhtar Restaurant",
+  "description": "Bilingual QR-code restaurant ordering, kitchen display system, and branch admin panel for Al Mokhtar Restaurant Riyadh (Al Mansourah & Al Aziziyah branches).",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

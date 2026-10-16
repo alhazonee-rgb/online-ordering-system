@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>مطعم المختار - Al Mokhtar Restaurant | طلب طاولة</title>
+  <meta name="theme-color" content="#8B0E14">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top Navigation & Brand Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-info">
+        <div class="brand-crest">
+          <span class="crest-icon">🍗</span>
+        </div>
+        <div>
+          <h1 id="brand-title" class="brand-title">مطعم المختار</h1>
+          <p id="brand-subtitle" class="brand-subtitle">الرياض - بروستد ومسحب طازج</p>
+        </div>
+      </div>
+      <button id="lang-toggle-btn" class="lang-btn" onclick="toggleLanguage()">English</button>
+    </div>
+  </header>
+
+  <!-- Table & Branch Location Ribbon -->
+  <section class="branch-ribbon">
+    <div class="ribbon-container">
+      <span class="badge-table" id="table-badge">طاولة #4</span>
+      <span class="badge-branch" id="branch-badge">📍 فرع المنصورة - طريق الخرج</span>
+    </div>
+  </section>
+
+  <!-- Allergy Disclaimer Notice -->
+  <section class="allergy-alert-banner">
+    <div class="allergy-content">
+      <span class="warning-icon">⚠️</span>
+      <div>
+        <strong id="allergy-title">تنبيه هام بشأن الحساسية الغذائية:</strong>
+        <p id="allergy-desc">يرجى العلم بأن تسجيل الملاحظات لا يضمن خلو الوجبة تماماً من مسببات الحساسية لوجود أسطح تحضير ومقالي مشتركة.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Category Filter Tabs -->
+  <nav class="category-nav">
+    <div class="category-scroll" id="categories-container">
+      <!-- Dynamic categories populated by app.js -->
+    </div>
+  </nav>
+
+  <!-- Main Menu Grid -->
+  <main class="menu-container">
+    <div class="menu-grid" id="menu-items-grid">
+      <!-- Dynamic items populated by app.js -->
+    </div>
+  </main>
+
+  <!-- Floating Cart Bar -->
+  <aside id="floating-cart-bar" class="floating-cart" style="display: none;" onclick="openCartModal()">
+    <div class="cart-left">
+      <span class="cart-count-badge" id="cart-item-count">0</span>
+      <span id="cart-bar-label">عرض السلة ومتابعة الطلب</span>
+    </div>
+    <div class="cart-right">
+      <span id="cart-bar-total" class="cart-total-text">0.00 SAR</span>
+    </div>
+  </aside>
+
+  <!-- Product Detail & Customization Modal -->
+  <div id="product-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeProductModal()">&times;</button>
+      <div class="modal-body">
+        <h2 id="modal-product-name" class="modal-title">اسم الوجبة</h2>
+        <p id="modal-product-desc" class="modal-desc">وصف الوجبة الكامل</p>
+        
+        <div class="modal-price-row">
+          <span id="modal-product-price" class="modal-price">0.00 SAR</span>
+          <span id="modal-product-cal" class="modal-cal">0 cal</span>
+        </div>
+
+        <div class="modal-section">
+          <label id="lbl-spice" class="section-label">درجة الحرارة:</label>
+          <div class="spice-toggle-group">
+            <button type="button" id="btn-spice-normal" class="spice-btn active" onclick="selectSpice('normal')">عادي (بدون شطة)</button>
+            <button type="button" id="btn-spice-spicy" class="spice-btn" onclick="selectSpice('spicy')">حراق (سبايسي)</button>
+          </div>
+        </div>
+
+        <div class="modal-section">
+          <label id="lbl-notes" class="section-label">ملاحظات التحضير الخاصة:</label>
+          <input type="text" id="modal-item-note" class="form-input" placeholder="مثال: زيادة صلصة ثوم أو بدون مخلل">
+        </div>
+
+        <div class="modal-actions-row">
+          <div class="stepper">
+            <button type="button" class="step-btn" onclick="decrementModalQty()">-</button>
+            <span id="modal-qty" class="step-value">1</span>
+            <button type="button" class="step-btn" onclick="incrementModalQty()">+</button>
+          </div>
+          <button id="modal-add-btn" class="primary-btn" onclick="confirmAddToCart()">إضافة للسلة</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cart & Checkout Modal -->
+  <div id="cart-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card cart-modal-card">
+      <div class="cart-header">
+        <h2 id="cart-title" class="modal-title">سلة طلب الطاولة</h2>
+        <button class="modal-close" onclick="closeCartModal()">&times;</button>
+      </div>
+
+      <div class="cart-items-list" id="cart-items-container">
+        <!-- Cart items rendered dynamically -->
+      </div>
+
+      <div class="cart-form-section">
+        <div class="input-group">
+          <label id="lbl-cust-name" class="form-label">اسم العميل (اختياري للنداء):</label>
+          <input type="text" id="cust-name-input" class="form-input" placeholder="مثال: محمد">
+        </div>
+
+        <div class="input-group">
+          <label id="lbl-kitchen-note" class="form-label">ملاحظات عامة للمطبخ:</label>
+          <input type="text" id="cust-notes-input" class="form-input" placeholder="مثال: الرجاء تقديم الوجبة ساخنة جداً">
+        </div>
+
+        <div class="allergy-input-box">
+          <label id="lbl-allergy-note" class="allergy-label">حساسية الطعام (إن وجدت):</label>
+          <input type="text" id="allergy-notes-input" class="form-input" placeholder="مثال: حساسية سمسم أو مكسرات">
+          <label class="checkbox-container">
+            <input type="checkbox" id="allergy-agreed" checked>
+            <span id="allergy-agree-text">أقر بأن الملاحظات لا تضمن خلو الطعام بنسبة 100% من مسببات الحساسية.</span>
+          </label>
+        </div>
+
+        <div class="pricing-summary">
+          <div class="price-row">
+            <span id="lbl-subtotal">المجموع قبل الضريبة:</span>
+            <span id="cart-subtotal-val">0.00 SAR</span>
+          </div>
+          <div class="price-row">
+            <span id="lbl-vat">ضريبة القيمة المضافة (15% ZATCA):</span>
+            <span id="cart-vat-val">0.00 SAR</span>
+          </div>
+          <div class="price-row total-row">
+            <span id="lbl-final-total">الإجمالي النهائي شامل الضريبة:</span>
+            <span id="cart-final-total-val" class="highlight-total">0.00 SAR</span>
+          </div>
+        </div>
+
+        <button id="btn-submit-order" class="primary-btn submit-btn" onclick="submitOrder()">
+          تأكيد وإرسال الطلب للمطبخ
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Success Confirmation Modal -->
+  <div id="order-success-modal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card success-card">
+      <div class="success-icon">✅</div>
+      <h2 id="success-title" class="success-heading">تم استلام طلبك بنجاح!</h2>
+      <p id="success-order-num" class="order-number-badge">MKT-MN-261016-105</p>
+      <p id="success-message" class="success-desc">جاري تحضير طلبك الآن في المطبخ وسيقدم مباشرة لطاولتك.</p>
+      <div class="status-timeline">
+        <div class="timeline-step active">1. تم الإرسال</div>
+        <div class="timeline-step active">2. المطبخ يحضر</div>
+        <div class="timeline-step">3. جاهز للتقديم</div>
+      </div>
+      <button class="primary-btn" onclick="closeSuccessModal()">إغلاق ومتابعة</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

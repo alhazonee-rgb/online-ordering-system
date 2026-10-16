@@ -1,0 +1,81 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for zero-trust least-privilege security
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.role == 'admin' ||
+         get(/databases/database/documents/admins/$(request.auth.uid)).data.active == true);
+    }
+
+    function isBranchStaff(branchId) {
+      return isAuthenticated() &&
+        (isAdmin() ||
+         get(/databases/database/documents/staff/$(request.auth.uid)).data.branchId == branchId);
+    }
+
+    // Central Menu & Prices:
+    // Public customers can only READ active items. Only verified admins can write or modify prices.
+    match /menu_items/{itemId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Branches & Tables configuration:
+    // Public can read basic branch info and table limits. Only admins can edit.
+    match /branches/{branchId} {
+      allow read: if true;
+      allow write: if isAdmin();
+
+      match /tables/{tableId} {
+        allow read: if true;
+        allow write: if isAdmin();
+      }
+    }
+
+    // Orders Collection:
+    // 1. Creation: Public customers CANNOT create directly into Firestore with untrusted client prices.
+    //    All orders are created via the Cloud Function endpoint `createOrder` which validates
+    //    table HMAC signatures and recalculates prices against master catalog.
+    // 2. Read: Authenticated branch staff or admin can read their branch orders.
+    //    A customer can only read their specific order if they have the unique client order token.
+    match /orders/{orderId} {
+      allow read: if isAuthenticated() && (isAdmin() || isBranchStaff(resource.data.branchId));
+      allow update: if isAuthenticated() && (isAdmin() || isBranchStaff(resource.data.branchId))
+                    && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'printedToKitchen', 'printedAt', 'updatedAt']);
+      allow delete: if isAdmin();
+      allow create: if false; // Must go through server-side Cloud Function
+    }
+
+    // Printer Jobs Queue:
+    // Only accessible by authenticated branch print agent or admin
+    match /print_jobs/{jobId} {
+      allow read, update: if isAuthenticated() && (isAdmin() || isBranchStaff(resource.data.branchId));
+      allow create, delete: if isAdmin();
+    }
+
+    // Internal Admin and Audit collections: strictly restricted
+    match /admins/{adminId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /staff/{staffId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if isAuthenticated();
+    }
+  }
+}

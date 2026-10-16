@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة إدارة مطعم المختار - Al Mokhtar Admin Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    .admin-nav {
+      background: #5D0005;
+      padding: 10px 16px;
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+    }
+    .admin-tab-btn {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.3);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .admin-tab-btn.active {
+      background: #D49A32;
+      color: #141316;
+      border-color: #D49A32;
+    }
+    .admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    }
+    .admin-table th, .admin-table td {
+      padding: 12px;
+      text-align: right;
+      border-bottom: 1px solid #EEE;
+      font-size: 13px;
+    }
+    .admin-table th {
+      background: #F9F8F6;
+      font-weight: 800;
+    }
+    .badge-offer {
+      background: #D49A32;
+      color: #141316;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 800;
+      font-size: 11px;
+    }
+    .badge-instock {
+      background: #E8F5E9;
+      color: #2E7D32;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+    .badge-soldout {
+      background: #FFEBEE;
+      color: #D32F2F;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand-info">
+        <div class="brand-crest"><span class="crest-icon">🍗</span></div>
+        <div>
+          <h1 class="brand-title">لوحة تحكم إدارة مطعم المختار</h1>
+          <p class="brand-subtitle">فروع الرياض: المنصورة والعزيزية</p>
+        </div>
+      </div>
+      <a href="index.html" class="lang-btn" style="text-decoration: none;">عرض شاشة العميل ➔</a>
+    </div>
+  </header>
+
+  <nav class="admin-nav">
+    <button class="admin-tab-btn active" onclick="showTab('stock')">📦 إدارة الأصناف والأسعار والعروض</button>
+    <button class="admin-tab-btn" onclick="showTab('kds')">👨‍🍳 طلبات المطبخ KDS</button>
+    <button class="admin-tab-btn" onclick="showTab('qr')">📲 رموز الطاولات QR</button>
+    <button class="admin-tab-btn" onclick="showTab('reports')">📊 تقارير المبيعات</button>
+  </nav>
+
+  <main class="menu-container" style="padding-top: 16px;">
+    <!-- Stock, Prices & Offers Management Tab -->
+    <div id="tab-stock">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h2>قائمة طعام المطعم والعروض %</h2>
+        <button class="primary-btn" style="width: auto; padding: 8px 16px;" onclick="promptNewItem()">+ إضافة وجبة جديدة</button>
+      </div>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>الصورة</th>
+            <th>اسم الصنف</th>
+            <th>السعر الأساسي</th>
+            <th>عرض الخصم %</th>
+            <th>السعر بعد الخصم</th>
+            <th>الحالة بالمطعم</th>
+            <th>إجراءات</th>
+          </tr>
+        </thead>
+        <tbody id="admin-menu-tbody">
+          <!-- Populated by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Live KDS Tab -->
+    <div id="tab-kds" style="display: none;">
+      <h2>طلبات المطبخ المباشرة (Live KDS Queue)</h2>
+      <div id="admin-orders-list" style="margin-top: 14px; display: flex; flex-direction: column; gap: 12px;">
+        <!-- Orders list -->
+      </div>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+  <script>
+    function showTab(tabId) {
+      document.getElementById('tab-stock').style.display = (tabId === 'stock') ? 'block' : 'none';
+      document.getElementById('tab-kds').style.display = (tabId === 'kds') ? 'block' : 'none';
+    }
+
+    function renderAdminMenuTable() {
+      const tbody = document.getElementById('admin-menu-tbody');
+      tbody.innerHTML = '';
+      MENU_ITEMS.forEach((it, idx) => {
+        const discount = it.discountPercent || 0;
+        const finalPrice = it.priceSar * (1 - discount / 100);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span style="font-size: 24px;">${it.icon}</span></td>
+          <td><strong>${it.nameAr}</strong><br><small style="color:#777">${it.nameEn}</small></td>
+          <td>${it.priceSar.toFixed(2)} SAR</td>
+          <td><span class="badge-offer">${discount}% OFF</span></td>
+          <td><strong style="color: #8B0E14;">${finalPrice.toFixed(2)} SAR</strong></td>
+          <td>
+            <span class="${it.isAvailable !== false ? 'badge-instock' : 'badge-soldout'}">
+              ${it.isAvailable !== false ? 'متوفر' : 'موقف (نفذ)'}
+            </span>
+          </td>
+          <td>
+            <button class="cat-btn" onclick="editItemPriceOffer(${idx})">تعديل السعر والعرض</button>
+            <button class="cat-btn" style="margin-top:4px;" onclick="toggleItemStock(${idx})">
+              ${it.isAvailable !== false ? 'إيقاف الصنف' : 'تفعيل الصنف'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function editItemPriceOffer(idx) {
+      const item = MENU_ITEMS[idx];
+      const newPrice = prompt(`تعديل سعر [${item.nameAr}] بالريال السعودي:`, item.priceSar);
+      if (newPrice !== null) {
+        const p = parseFloat(newPrice);
+        if (!isNaN(p) && p > 0) item.priceSar = p;
+      }
+      const newOffer = prompt(`أدخل نسبة الخصم % لـ [${item.nameAr}] (مثال: 10 أو 15 أو 0):`, item.discountPercent || 0);
+      if (newOffer !== null) {
+        const d = parseInt(newOffer, 10);
+        if (!isNaN(d)) item.discountPercent = Math.max(0, Math.min(d, 90));
+      }
+      renderAdminMenuTable();
+    }
+
+    function toggleItemStock(idx) {
+      MENU_ITEMS[idx].isAvailable = (MENU_ITEMS[idx].isAvailable === false);
+      renderAdminMenuTable();
+    }
+
+    function promptNewItem() {
+      const name = prompt("اسم الوجبة بالعربي:");
+      if (!name) return;
+      const price = parseFloat(prompt("السعر بالريال السعودي:", "25"));
+      MENU_ITEMS.push({
+        id: "custom_" + Date.now(),
+        categoryId: "broast",
+        nameAr: name,
+        nameEn: name,
+        descAr: "وجبة جديدة طازجة",
+        descEn: "Fresh special dish",
+        priceSar: price || 25,
+        discountPercent: 0,
+        isSpicy: false,
+        isAvailable: true,
+        icon: "🍗"
+      });
+      renderAdminMenuTable();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      renderAdminMenuTable();
+    });
+  </script>
+</body>
+</html>
